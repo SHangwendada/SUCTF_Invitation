@@ -212,9 +212,9 @@
     // 设置高分辨率画布并调整大小
     function setupCanvas(canvas, context) {
       const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      canvas.width = rect.width * dpr;
-      canvas.height = rect.height * dpr;
+      // 固定内部画布尺寸
+      canvas.width = 1080 * dpr;
+      canvas.height = 1920 * dpr;
       context.scale(dpr, dpr);
     }
 
@@ -236,17 +236,17 @@
       ctx.fillStyle = '#FF0000';
       ctx.font = "30px Arial";
       ctx.textAlign = 'center';
-      ctx.fillText("图像加载失败", canvas.width / (dpr) / 2, canvas.height / (dpr) / 2);
+      ctx.textBaseline = 'middle';
+      ctx.fillText("图像加载失败", 540, 960); // 1080/2, 1920/2
     };
 
     // 绘制邀请函
     const inviteeInput = document.getElementById('inviteeName');
 
     function drawInvitation() {
-      const dpr = window.devicePixelRatio || 1;
-      const rect = canvas.getBoundingClientRect();
-      const canvasWidth = rect.width;
-      const canvasHeight = rect.height;
+      // 固定内部画布尺寸
+      const canvasWidth = 1080;
+      const canvasHeight = 1920;
 
       // 清除画布
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -255,14 +255,14 @@
       // 获取邀请人姓名
       const inviteeName = inviteeInput.value.trim() || "被邀请人";
       // 设置文本样式
-      const fontSize = Math.floor(canvasHeight * 0.04); // 字体大小为画布高度的4%
+      const fontSize = Math.floor(canvasHeight * 0.04); // 字体大小为画布高度的4%，即96px
       ctx.font = `bold ${fontSize}px 'Fira Sans', sans-serif`;
       ctx.fillStyle = 'rgba(255, 255, 255, 1)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // 计算文本位置（固定比例位置）
-      const xPosition = canvasWidth / 2;
-      const yPosition = canvasHeight - (canvasHeight / 4 + 50);
+      // 计算文本位置（固定坐标）
+      const xPosition = 540; // 1080 / 2
+      const yPosition = 1390; // 1920 - (1920 / 4 + 50) = 1390
       ctx.fillText(inviteeName, xPosition, yPosition);
     }
 
@@ -287,7 +287,8 @@
 
     // 重新绘制画布在窗口尺寸变化时
     window.addEventListener('resize', () => {
-      setupCanvas(canvas, ctx);
+      // 由于内部尺寸固定，不需要重新设置canvas.width和height
+      // 只需要重新绘制内容
       drawInvitation();
     });
 
