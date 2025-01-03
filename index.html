@@ -7,9 +7,25 @@
   <!-- 引入 Fira Sans 字体 -->
   <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@700&display=swap" rel="stylesheet">
   <style>
+    /* 添加背景图片 */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: url('back.png'); /* 确保 back.png 位于正确的路径 */
+      background-size: cover;
+      background-position: center;
+      opacity: 0.7; /* 70% 透明度 */
+      z-index: -2; /* 最底层 */
+    }
+
+    /* 基础样式 */
     body {
-      font-family: 'Arial', sans-serif;
-      background: #070B1D;
+      font-family: 'Fira Sans', sans-serif;
+      background: linear-gradient(135deg, #1E2747, #070B1D); /* 保持现有的渐变背景 */
       color: #ffffff;
       margin: 0;
       padding: 0;
@@ -17,18 +33,24 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      overflow: hidden;
+      position: relative; /* 为伪元素定位提供参考 */
     }
 
     .container {
       display: flex;
       flex-direction: column; /* 垂直排列 */
-      background: rgba(10, 17, 40, 0.85);
+      background: rgba(30, 39, 71, 0.9); /* 保持半透明背景 */
       border-radius: 15px;
       max-width: 1000px; /* 增加容器的最大宽度 */
       width: 90%;
       padding: 2rem;
       box-sizing: border-box;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+      position: relative; /* 确保内容在伪元素之上 */
+      z-index: 1; /* 提高容器层级，确保在背景之上 */
     }
 
     /* 信息输入部分 */
@@ -51,11 +73,14 @@
       -webkit-background-clip: text;
       color: transparent;
       margin: 0;
+      background-size: 200% 200%;
+      animation: gradientAnimation 5s ease infinite;
     }
 
     .time-info {
-      font-size: 0.9rem;
+      font-size: 1rem;
       color: #A0A0A0;
+      animation: fadeIn 2s ease;
     }
 
     .time-info span {
@@ -71,19 +96,21 @@
       width: 100%;
       max-width: 500px; /* 增加输入组的最大宽度 */
       margin: 0 auto; /* 居中对齐 */
+      position: relative;
     }
 
     .input-group input {
-      padding: 12px;
+      padding: 12px 20px;
       font-size: 1rem;
-      border: 1px solid #2A375F;
+      border: none;
       border-radius: 8px;
       background: #1E2747;
       color: white;
       outline: none;
-      transition: border-color 0.3s ease;
+      transition: all 0.3s ease;
       width: 100%; /* 确保输入框宽度 */
       box-sizing: border-box; /* 包含padding和border在内 */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
 
     .input-group input::placeholder {
@@ -91,7 +118,8 @@
     }
 
     .input-group input:focus {
-      border-color: #00F5FF;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 245, 255, 0.4);
     }
 
     .button {
@@ -103,13 +131,21 @@
       color: #070B1D;
       cursor: pointer;
       font-weight: bold;
-      transition: background 0.3s ease;
+      transition: all 0.3s ease;
       width: 100%; /* 确保按钮宽度 */
       box-sizing: border-box; /* 包含padding和border在内 */
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
 
     .button:hover {
       background: linear-gradient(90deg, #00F5FF, #45a049);
+      transform: scale(1.05);
+      box-shadow: 0 6px 12px rgba(0, 245, 255, 0.4);
+    }
+
+    .button:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 4px rgba(0, 245, 255, 0.2);
     }
 
     .button:focus {
@@ -122,6 +158,7 @@
       justify-content: center;
       align-items: center;
       width: 100%;
+      position: relative;
     }
 
     .canvas-container {
@@ -130,7 +167,13 @@
       max-width: 700px; /* 增加画布容器的最大宽度 */
       /* 维持画布的纵横比 */
       padding-top: 177.78%; /* (1920 / 1080) * 100% */
-      position: relative;
+      border: 2px solid #00F5FF;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 6px rgba(0, 245, 255, 0.3);
+      background: #1E2747;
+      transition: all 0.3s ease;
+      z-index: 1;
     }
 
     canvas {
@@ -141,6 +184,60 @@
       height: 100%;
       border-radius: 10px;
       background: #1E2747;
+      opacity: 0;
+      animation: fadeInCanvas 1s forwards;
+    }
+
+    /* 加载动画样式 */
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(30, 39, 71, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 12px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 10;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .spinner {
+      border: 6px solid rgba(255, 255, 255, 0.2);
+      border-top: 6px solid #00F5FF;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    /* 动画关键帧 */
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeInCanvas {
+      to { opacity: 1; }
+    }
+
+    @keyframes gradientAnimation {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
 
     /* 移动设备友好样式 */
@@ -159,7 +256,7 @@
 
       .input-group input {
         font-size: 0.9rem;
-        padding: 10px;
+        padding: 10px 16px;
       }
 
       .button {
@@ -196,6 +293,9 @@
     <div class="preview-section">
       <div class="canvas-container">
         <canvas id="invitationCanvas"></canvas>
+        <div class="loading-overlay" id="loadingOverlay">
+          <div class="spinner"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -218,6 +318,16 @@
       context.scale(dpr, dpr);
     }
 
+    // 显示加载动画
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    // 隐藏加载动画
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
     // 预加载图像
     const canvas = document.getElementById('invitationCanvas');
     const ctx = canvas.getContext('2d');
@@ -228,6 +338,7 @@
     image.onload = () => {
       setupCanvas(canvas, ctx);
       drawInvitation();
+      hideLoading(); // 隐藏加载动画
     };
 
     image.onerror = () => {
@@ -238,6 +349,7 @@
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText("图像加载失败", 540, 960); // 1080/2, 1920/2
+      hideLoading(); // 隐藏加载动画
     };
 
     // 绘制邀请函
@@ -267,22 +379,33 @@
     }
 
     // 添加输入事件监听器
-    inviteeInput.addEventListener('input', drawInvitation);
+    inviteeInput.addEventListener('input', () => {
+      showLoading(); // 显示加载动画
+      setTimeout(() => {
+        drawInvitation();
+        hideLoading(); // 隐藏加载动画
+      }, 300); // 模拟加载时间
+    });
 
     // 生成邀请下载链接
     document.getElementById('generateButton').addEventListener('click', () => {
-      canvas.toBlob((blob) => {
-          const link = document.createElement('a');
-          link.download = 'SUCTF_Invitation.png';
-          link.href = URL.createObjectURL(blob);
-          link.click();
-      }, 'image/png');
+      showLoading(); // 显示加载动画
+      setTimeout(() => {
+        canvas.toBlob((blob) => {
+            const link = document.createElement('a');
+            link.download = 'SUCTF_Invitation.png';
+            link.href = URL.createObjectURL(blob);
+            link.click();
+            hideLoading(); // 隐藏加载动画
+        }, 'image/png');
+      }, 500); // 模拟生成时间
     });
 
     // 初始化绘制
     window.addEventListener('load', () => {
       setupCanvas(canvas, ctx);
       drawInvitation();
+      hideLoading(); // 隐藏加载动画
     });
 
     // 重新绘制画布在窗口尺寸变化时
@@ -294,6 +417,9 @@
 
     // 更新时间每秒
     setInterval(updateTime, 1000);
+
+    // 显示加载动画初始化
+    showLoading();
   </script>
 
 </body>
