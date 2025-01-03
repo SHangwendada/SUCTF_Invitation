@@ -22,25 +22,27 @@
       z-index: -2; /* 最底层 */
     }
 
-    /* 移除 body 的渐变背景，避免与背景图片冲突 */
+    /* 基础样式 */
     body {
       font-family: 'Fira Sans', sans-serif;
-      background: none; /* 移除渐变背景 */
+      background: linear-gradient(135deg, #1E2747, #070B1D); /* 保持现有的渐变背景 */
       color: #ffffff;
       margin: 0;
       padding: 0;
       display: flex;
-      justify-content: center;
-      align-items: center;
+      flex-direction: column; /* 垂直排列 */
+      justify-content: flex-start; /* 从顶部开始 */
+      align-items: center; /* 水平居中 */
       min-height: 100vh;
-      overflow: hidden;
+      /* 移除 overflow: hidden; 以允许滚动 */
       position: relative; /* 为伪元素定位提供参考 */
+      z-index: 1; /* 提高容器层级，确保在背景之上 */
     }
 
     .container {
       display: flex;
       flex-direction: column; /* 垂直排列 */
-      background: rgba(30, 39, 71, 0.9); /* 半透明背景 */
+      background: rgba(30, 39, 71, 0.9); /* 保持半透明背景 */
       border-radius: 15px;
       max-width: 1000px; /* 增加容器的最大宽度 */
       width: 90%;
@@ -49,7 +51,10 @@
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
+      position: relative; /* 确保内容在伪元素之上 */
       z-index: 1; /* 提高容器层级，确保在背景之上 */
+      margin-top: 20px; /* 增加顶部间距，防止内容紧贴顶部 */
+      margin-bottom: 20px; /* 增加底部间距，防止内容紧贴底部 */
     }
 
     /* 信息输入部分 */
@@ -74,6 +79,11 @@
       margin: 0;
       background-size: 200% 200%;
       animation: gradientAnimation 5s ease infinite;
+      transition: background 0.5s ease;
+    }
+
+    .header h1:hover {
+      background: linear-gradient(90deg, #89FF86, #00F5FF);
     }
 
     .time-info {
@@ -106,10 +116,10 @@
       background: #1E2747;
       color: white;
       outline: none;
-      transition: all 0.3s ease;
+      transition: border-color 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
       width: 100%; /* 确保输入框宽度 */
       box-sizing: border-box; /* 包含padding和border在内 */
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
     .input-group input::placeholder {
@@ -117,8 +127,9 @@
     }
 
     .input-group input:focus {
+      border: 2px solid #00F5FF;
+      box-shadow: 0 4px 8px rgba(0, 245, 255, 0.4);
       transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0, 245, 255, 0.4);
     }
 
     .button {
@@ -134,6 +145,27 @@
       width: 100%; /* 确保按钮宽度 */
       box-sizing: border-box; /* 包含padding和border在内 */
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .button::after {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      transition: width 0.3s ease, height 0.3s ease;
+    }
+
+    .button:active::after {
+      width: 200%;
+      height: 200%;
+      transition: 0s;
     }
 
     .button:hover {
@@ -189,7 +221,7 @@
 
     /* 加载动画样式 */
     .loading-overlay {
-      position: absolute;
+      position: fixed; /* 改为 fixed，覆盖整个页面 */
       top: 0;
       left: 0;
       width: 100%;
@@ -202,7 +234,7 @@
       opacity: 0;
       visibility: hidden;
       transition: opacity 0.3s ease, visibility 0.3s ease;
-      z-index: 10;
+      z-index: 100; /* 确保加载动画在最上层 */
     }
 
     .loading-overlay.active {
@@ -265,12 +297,17 @@
 
       .canvas-container {
         max-width: 90%; /* 进一步增加移动设备上的画布宽度 */
-        padding-top: 177.78%; /* 保持相同的纵横比 */
+        padding-top: 150%; /* 调整纵横比，避免过高 */
       }
     }
   </style>
 </head>
 <body>
+
+  <!-- 加载动画 -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+  </div>
 
   <div class="container">
     <!-- 信息输入部分 -->
@@ -293,9 +330,6 @@
     <div class="preview-section">
       <div class="canvas-container">
         <canvas id="invitationCanvas"></canvas>
-        <div class="loading-overlay" id="loadingOverlay">
-          <div class="spinner"></div>
-        </div>
       </div>
     </div>
   </div>
