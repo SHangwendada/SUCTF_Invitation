@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>SUCTF 邀请函生成器</title>
-  <!-- 引入Fira Sans字体 -->
+  <!-- 引入 Fira Sans 字体 -->
   <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -195,7 +195,7 @@
     <!-- 预览部分 -->
     <div class="preview-section">
       <div class="canvas-container">
-        <canvas id="invitationCanvas" width="1080" height="1920"></canvas>
+        <canvas id="invitationCanvas"></canvas>
       </div>
     </div>
   </div>
@@ -209,11 +209,12 @@
       document.querySelector('.current-time').innerText = formattedTime;
     }
 
-    // 设置高分辨率画布
+    // 设置高分辨率画布并调整大小
     function setupCanvas(canvas, context) {
       const dpr = window.devicePixelRatio || 1;
-      canvas.width = 1080 * dpr;
-      canvas.height = 1920 * dpr;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
       context.scale(dpr, dpr);
     }
 
@@ -231,19 +232,22 @@
 
     image.onerror = () => {
       console.error('图像加载失败，请检查图像路径或跨域设置。');
+      const dpr = window.devicePixelRatio || 1;
       ctx.fillStyle = '#FF0000';
       ctx.font = "30px Arial";
       ctx.textAlign = 'center';
-      ctx.fillText("图像加载失败", canvas.width / (window.devicePixelRatio || 1) / 2, canvas.height / (window.devicePixelRatio || 1) / 2);
+      ctx.fillText("图像加载失败", canvas.width / (dpr) / 2, canvas.height / (dpr) / 2);
     };
 
     // 绘制邀请函
     const inviteeInput = document.getElementById('inviteeName');
+
     function drawInvitation() {
       const dpr = window.devicePixelRatio || 1;
-      const canvasWidth = 1080;
-      const canvasHeight = 1920;
-      
+      const rect = canvas.getBoundingClientRect();
+      const canvasWidth = rect.width;
+      const canvasHeight = rect.height;
+
       // 清除画布
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
       // 绘制背景图像
@@ -256,12 +260,13 @@
       ctx.fillStyle = 'rgba(255, 255, 255, 1)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // 计算文本位置（固定坐标）
-      const xPosition = canvasWidth / 2; // 540
-      const yPosition = canvasHeight - (canvasHeight / 4 + 50); // 1920 - (480 + 50) = 1390
+      // 计算文本位置（固定比例位置）
+      const xPosition = canvasWidth / 2;
+      const yPosition = canvasHeight - (canvasHeight / 4 + 50);
       ctx.fillText(inviteeName, xPosition, yPosition);
     }
 
+    // 添加输入事件监听器
     inviteeInput.addEventListener('input', drawInvitation);
 
     // 生成邀请下载链接
@@ -275,10 +280,16 @@
     });
 
     // 初始化绘制
-    image.onload = () => {
+    window.addEventListener('load', () => {
       setupCanvas(canvas, ctx);
       drawInvitation();
-    };
+    });
+
+    // 重新绘制画布在窗口尺寸变化时
+    window.addEventListener('resize', () => {
+      setupCanvas(canvas, ctx);
+      drawInvitation();
+    });
 
     // 更新时间每秒
     setInterval(updateTime, 1000);
