@@ -22,10 +22,10 @@
       z-index: -2; /* 最底层 */
     }
 
-    /* 基础样式 */
+    /* 移除 body 的渐变背景，避免与背景图片冲突 */
     body {
       font-family: 'Fira Sans', sans-serif;
-      background: linear-gradient(135deg, #1E2747, #070B1D); /* 保持现有的渐变背景 */
+      background: none; /* 移除渐变背景 */
       color: #ffffff;
       margin: 0;
       padding: 0;
@@ -40,7 +40,7 @@
     .container {
       display: flex;
       flex-direction: column; /* 垂直排列 */
-      background: rgba(30, 39, 71, 0.9); /* 保持半透明背景 */
+      background: rgba(30, 39, 71, 0.9); /* 半透明背景 */
       border-radius: 15px;
       max-width: 1000px; /* 增加容器的最大宽度 */
       width: 90%;
@@ -49,7 +49,6 @@
       box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
       backdrop-filter: blur(10px);
       transition: all 0.3s ease;
-      position: relative; /* 确保内容在伪元素之上 */
       z-index: 1; /* 提高容器层级，确保在背景之上 */
     }
 
@@ -266,6 +265,7 @@
 
       .canvas-container {
         max-width: 90%; /* 进一步增加移动设备上的画布宽度 */
+        padding-top: 177.78%; /* 保持相同的纵横比 */
       }
     }
   </style>
@@ -334,6 +334,9 @@
     const image = new Image();
     image.crossOrigin = 'Anonymous';  // 确保跨域图像访问
     image.src = "suctf.png"; // 替换为您的图像URL
+
+    // 显示加载动画初始化
+    showLoading();
 
     image.onload = () => {
       setupCanvas(canvas, ctx);
@@ -417,9 +420,6 @@
 
     // 更新时间每秒
     setInterval(updateTime, 1000);
-
-    // 显示加载动画初始化
-    showLoading();
   </script>
 
 </body>
