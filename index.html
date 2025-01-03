@@ -193,11 +193,10 @@
     }
 
     .canvas-container {
-      position: relative;
+      position: relative; /* 关键: 为绝对定位的canvas提供参考 */
       width: 100%;
       max-width: 700px; /* 增加画布容器的最大宽度 */
-      /* 维持画布的纵横比 */
-      padding-top: 177.78%; /* (1920 / 1080) * 100% */
+      aspect-ratio: 9 / 16; /* 使用现代CSS属性保持纵横比 */
       border: 2px solid #00F5FF;
       border-radius: 12px;
       overflow: hidden;
@@ -208,20 +207,22 @@
     }
 
     canvas {
-      position: absolute;
+      position: absolute; /* 关键: 使canvas覆盖整个容器 */
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
+      display: block;
       border-radius: 10px;
       background: #1E2747;
-      opacity: 0;
-      animation: fadeInCanvas 1s forwards;
+      opacity: 1;
+      /* 临时添加红色边框以调试 */
+      /* border: 2px solid red; */
     }
 
     /* 加载动画样式 */
     .loading-overlay {
-      position: fixed; /* 改为 fixed，覆盖整个页面 */
+      position: fixed; /* 覆盖整个页面 */
       top: 0;
       left: 0;
       width: 100%;
@@ -256,16 +257,14 @@
       to { transform: rotate(360deg); }
     }
 
-    @keyframes fadeInCanvas {
-      to { opacity: 1; }
-    }
-
+    /* 头部动画 */
     @keyframes gradientAnimation {
       0% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
       100% { background-position: 0% 50%; }
     }
 
+    /* 淡入动画 */
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
@@ -297,7 +296,13 @@
 
       .canvas-container {
         max-width: 90%; /* 进一步增加移动设备上的画布宽度 */
-        padding-top: 150%; /* 调整纵横比，避免过高 */
+        /* aspect-ratio: 9 / 16; */ /* 保持统一的纵横比，无需调整 */
+      }
+
+      canvas {
+        /* 已经绝对定位，无需调整 */
+        width: 100%;
+        height: 100%;
       }
     }
   </style>
@@ -344,11 +349,19 @@
     }
 
     // 设置高分辨率画布并调整大小
-    function setupCanvas(canvas, context) {
+    function setupCanvas(canvas, context, image) {
       const dpr = window.devicePixelRatio || 1;
-      // 固定内部画布尺寸
-      canvas.width = 1080 * dpr;
-      canvas.height = 1920 * dpr;
+      const imgWidth = image.naturalWidth;
+      const imgHeight = image.naturalHeight;
+
+      // 设置 canvas 的实际像素尺寸
+      canvas.width = imgWidth * dpr;
+      canvas.height = imgHeight * dpr;
+
+      // 设置 canvas 的 CSS 尺寸为 100% 以适应容器
+      canvas.style.width = '100%';
+      canvas.style.height = '100%'; // 改为100%以覆盖父容器
+
       context.scale(dpr, dpr);
     }
 
@@ -373,7 +386,7 @@
     showLoading();
 
     image.onload = () => {
-      setupCanvas(canvas, ctx);
+      setupCanvas(canvas, ctx, image);
       drawInvitation();
       hideLoading(); // 隐藏加载动画
     };
@@ -385,34 +398,69 @@
       ctx.font = "30px Arial";
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText("图像加载失败", 540, 960); // 1080/2, 1920/2
+      ctx.fillText("图像加载失败", canvas.width / (2 * dpr), canvas.height / (2 * dpr));
       hideLoading(); // 隐藏加载动画
     };
 
     // 绘制邀请函
     const inviteeInput = document.getElementById('inviteeName');
 
+    function updateFontSize() {
+      // 获取当前的 Canvas 尺寸（不包括设备像素比）
+      const canvasWidth = canvas.width / (window.devicePixelRatio || 1);
+      const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
+
+      // 根据窗口宽度调整字体大小比例
+      let fontRatio = 0.05; // 默认5%
+      if (window.innerWidth < 600) { // 手机
+        fontRatio = 0.05; // 增加字体大小
+      } else if (window.innerWidth < 900) { // 平板
+        fontRatio = 0.05; // 增加字体大小
+      } else { // 桌面
+        fontRatio = 0.05; // 增加字体大小
+      }
+
+      const fontSize = Math.floor(canvasHeight * fontRatio);
+      ctx.font = `bold ${fontSize}px 'Fira Sans', sans-serif`;
+    }
+
     function drawInvitation() {
-      // 固定内部画布尺寸
-      const canvasWidth = 1080;
-      const canvasHeight = 1920;
+      // 获取当前的 Canvas 尺寸（不包括设备像素比）
+      const canvasWidth = canvas.width / (window.devicePixelRatio || 1);
+      const canvasHeight = canvas.height / (window.devicePixelRatio || 1);
 
       // 清除画布
       ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+
       // 绘制背景图像
       ctx.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+
       // 获取邀请人姓名
       const inviteeName = inviteeInput.value.trim() || "被邀请人";
+
       // 设置文本样式
-      const fontSize = Math.floor(canvasHeight * 0.04); // 字体大小为画布高度的4%，即96px
-      ctx.font = `bold ${fontSize}px 'Fira Sans', sans-serif`;
+      updateFontSize(); // 动态调整字体大小
       ctx.fillStyle = 'rgba(255, 255, 255, 1)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      // 计算文本位置（固定坐标）
-      const xPosition = 540; // 1080 / 2
-      const yPosition = 1390; // 1920 - (1920 / 4 + 50) = 1390
+
+      // 设置炫酷的阴影效果
+      ctx.shadowColor = 'rgba(0, 245, 255, 0.8)'; // 阴影颜色
+      ctx.shadowBlur = 40; // 阴影模糊度
+      ctx.shadowOffsetX = 10; // 阴影水平偏移
+      ctx.shadowOffsetY = 10; // 阴影垂直偏移
+
+      // 计算文本位置（根据图片设计调整）
+      const xPosition = canvasWidth / 2; // 水平居中
+      const yPosition = canvasHeight * 0.70; // 根据需要调整垂直位置
+
       ctx.fillText(inviteeName, xPosition, yPosition);
+
+      // 重置阴影以防影响其他绘制
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
     }
 
     // 添加输入事件监听器
@@ -440,15 +488,15 @@
 
     // 初始化绘制
     window.addEventListener('load', () => {
-      setupCanvas(canvas, ctx);
-      drawInvitation();
-      hideLoading(); // 隐藏加载动画
+      if (image.complete) {
+        setupCanvas(canvas, ctx, image);
+        drawInvitation();
+        hideLoading(); // 隐藏加载动画
+      }
     });
 
     // 重新绘制画布在窗口尺寸变化时
     window.addEventListener('resize', () => {
-      // 由于内部尺寸固定，不需要重新设置canvas.width和height
-      // 只需要重新绘制内容
       drawInvitation();
     });
 
