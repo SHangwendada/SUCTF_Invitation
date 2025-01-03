@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SUCTF 邀请函生成器</title>
+  <!-- 引入Fira Sans字体 -->
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background: #070B1D;
+      color: #ffffff;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column; /* 垂直排列 */
+      background: rgba(10, 17, 40, 0.85);
+      border-radius: 15px;
+      max-width: 1000px; /* 增加容器的最大宽度 */
+      width: 90%;
+      padding: 2rem;
+      box-sizing: border-box;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* 信息输入部分 */
+    .info-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      margin-bottom: 30px; /* 增加下方间距 */
+    }
+
+    /* 头部 */
+    .header {
+      text-align: center;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(90deg, #00F5FF, #89FF86);
+      -webkit-background-clip: text;
+      color: transparent;
+      margin: 0;
+    }
+
+    .time-info {
+      font-size: 0.9rem;
+      color: #A0A0A0;
+    }
+
+    .time-info span {
+      color: #00F5FF;
+      font-family: monospace;
+    }
+
+    /* 输入和按钮样式 */
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      width: 100%;
+      max-width: 500px; /* 增加输入组的最大宽度 */
+      margin: 0 auto; /* 居中对齐 */
+    }
+
+    .input-group input {
+      padding: 12px;
+      font-size: 1rem;
+      border: 1px solid #2A375F;
+      border-radius: 8px;
+      background: #1E2747;
+      color: white;
+      outline: none;
+      transition: border-color 0.3s ease;
+      width: 100%; /* 确保输入框宽度 */
+      box-sizing: border-box; /* 包含padding和border在内 */
+    }
+
+    .input-group input::placeholder {
+      color: #A0A0A0;
+    }
+
+    .input-group input:focus {
+      border-color: #00F5FF;
+    }
+
+    .button {
+      padding: 12px;
+      font-size: 1.1rem;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(90deg, #00F5FF, #89FF86);
+      color: #070B1D;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+      width: 100%; /* 确保按钮宽度 */
+      box-sizing: border-box; /* 包含padding和border在内 */
+    }
+
+    .button:hover {
+      background: linear-gradient(90deg, #00F5FF, #45a049);
+    }
+
+    .button:focus {
+      outline: none;
+    }
+
+    /* 预览部分 */
+    .preview-section {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .canvas-container {
+      position: relative;
+      width: 100%;
+      max-width: 700px; /* 增加画布容器的最大宽度 */
+      /* 维持画布的纵横比 */
+      padding-top: 177.78%; /* (1920 / 1080) * 100% */
+      position: relative;
+    }
+
+    canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 10px;
+      background: #1E2747;
+    }
+
+    /* 移动设备友好样式 */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.5rem;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .time-info {
+        font-size: 0.8rem;
+      }
+
+      .input-group input {
+        font-size: 0.9rem;
+        padding: 10px;
+      }
+
+      .button {
+        font-size: 1rem;
+        padding: 10px;
+      }
+
+      .canvas-container {
+        max-width: 90%; /* 进一步增加移动设备上的画布宽度 */
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 信息输入部分 -->
+    <div class="info-section">
+      <div class="header">
+        <h1>SUCTF 邀请函生成器</h1>
+        <p class="time-info">
+          开放时间：2025年1月1日-10日 <br>
+          当前时间：<span class="current-time">00:00:00</span>
+        </p>
+      </div>
+
+      <div class="input-group">
+        <input type="text" id="inviteeName" placeholder="请输入被邀请人">
+        <button class="button" id="generateButton">生成邀请函</button>
+      </div>
+    </div>
+
+    <!-- 预览部分 -->
+    <div class="preview-section">
+      <div class="canvas-container">
+        <canvas id="invitationCanvas" width="1080" height="1920"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 时间更新时间函数
+    function updateTime() {
+      const now = new Date();
+      const format = n => n.toString().padStart(2, '0');
+      const formattedTime = `${now.getFullYear()}年${format(now.getMonth() + 1)}月${format(now.getDate())}日 / ${format(now.getHours())}:${format(now.getMinutes())}:${format(now.getSeconds())}`;
+      document.querySelector('.current-time').innerText = formattedTime;
+    }
+
+    // 设置高分辨率画布
+    function setupCanvas(canvas, context) {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = 1080 * dpr;
+      canvas.height = 1920 * dpr;
+      context.scale(dpr, dpr);
+    }
+
+    // 预加载图像
+    const canvas = document.getElementById('invitationCanvas');
+    const ctx = canvas.getContext('2d');
+    const image = new Image();
+    image.crossOrigin = 'Anonymous';  // 确保跨域图像访问
+    image.src = "suctf.png"; // 替换为您的图像URL
+
+    image.onload = () => {
+      setupCanvas(canvas, ctx);
+      drawInvitation();
+    };
+
+    image.onerror = () => {
+      console.error('图像加载失败，请检查图像路径或跨域设置。');
+      ctx.fillStyle = '#FF0000';
+      ctx.font = "30px Arial";
+      ctx.textAlign = 'center';
+      ctx.fillText("图像加载失败", canvas.width / (window.devicePixelRatio || 1) / 2, canvas.height / (window.devicePixelRatio || 1) / 2);
+    };
+
+    // 绘制邀请函
+    const inviteeInput = document.getElementById('inviteeName');
+    function drawInvitation() {
+      const dpr = window.devicePixelRatio || 1;
+      const canvasWidth = 1080;
+      const canvasHeight = 1920;
+
+      // 清除画布
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      // 绘制背景图像
+      ctx.drawImage(image, 0, 0, canvasWidth, canvasHeight);
+      // 获取邀请人姓名
+      const inviteeName = inviteeInput.value.trim() || "被邀请人";
+      // 设置文本样式
+      const fontSize = Math.floor(canvasHeight * 0.04); // 字体大小为画布高度的4%
+      ctx.font = `bold ${fontSize}px 'Fira Sans', sans-serif`;
+      ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // 计算文本位置（固定坐标）
+      const xPosition = canvasWidth / 2; // 540
+      const yPosition = canvasHeight - (canvasHeight / 4 + 50+20); // 1920 - (480 + 50) = 1390
+      ctx.fillText(inviteeName, xPosition, yPosition);
+    }
+
+    inviteeInput.addEventListener('input', drawInvitation);
+
+    // 生成邀请下载链接
+    document.getElementById('generateButton').addEventListener('click', () => {
+      canvas.toBlob((blob) => {
+          const link = document.createElement('a');
+          link.download = 'SUCTF_Invitation.png';
+          link.href = URL.createObjectURL(blob);
+          link.click();
+      }, 'image/png');
+    });
+
+    // 初始化绘制
+    image.onload = () => {
+      setupCanvas(canvas, ctx);
+      drawInvitation();
+    };
+
+    // 更新时间每秒
+    setInterval(updateTime, 1000);
+  </script>
+
+</body>
+</html>
